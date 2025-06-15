@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Tracker</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: black;
+        color: white;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Navigation Bar Styling */
+    .nav-bar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #333;
+        padding: 10px;
+        flex-wrap: wrap;
+        gap: 15px; /* Gap between tab group and action group */
+    }
+
+    .nav-group-tabs, .nav-group-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 5px; /* Gap between buttons inside a group */
+    }
+
+    .nav-bar button { /* Common button styling */
+        color: white;
+        background-color: #444;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+    .nav-bar button:hover {
+        background-color: #555;
+    }
+
+    .nav-bar button.active { /* Active Tab button */
+        background-color: #007bff; 
+        font-weight: bold;
+    }
+
+    .nav-group-actions .action-button-characters {
+        background-color: #17a2b8;
+    }
+    .nav-group-actions .action-button-characters:hover {
+        background-color: #138496;
+    }
+    .nav-group-actions .action-button-save {
+        background-color: #28a745; /* Green */
+    }
+    .nav-group-actions .action-button-save:hover {
+        background-color: #218838; /* Darker Green */
+    }
+   
+    /* Sub Navigation Bar Styling */
+    .sub-nav-bar {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #444;
+        padding-bottom: 10px;
+        padding-top: 10px;
+    }
+    .sub-nav-bar button {
+        padding: 8px 15px;
+        font-size: 0.95em;
+        background-color: #555; 
+        color: white;
+        border: none;
+        border-radius: 4px;
+        margin: 0 5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .sub-nav-bar button:hover {
+        background-color: #666;
+    }
+    .sub-nav-bar button.active-sub-nav { 
+        background-color: #0069d9; 
+        font-weight: bold;
+    }
+    .sub-content, .spell-list-content { display: none; }
+    .sub-content.active-sub-content { display: block; }
+    .spell-list-content.active-spell-list { display: flex; flex-direction: column; }
+
+
+    /* Common styling for action buttons */
+    .action-btn {
+        border: none;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 0.85em;
+        border-radius: 4px;
+        transition: background-color 0.2s ease-in-out;
+        text-align: center;
+        box-sizing: border-box;
+        color: white; 
+        margin: 0; 
+        line-height: 1.3;
+        white-space: normal;
+        word-break: break-word;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        flex-grow: 0;
+        flex-shrink: 0;
+        min-width: 80px;
+    }
+    #spells .action-btn {
+         flex-basis: calc((100% - (4 * 8px)) / 5 - 1px);
+    }
+
+    .action-button-add { background-color: #007bff; }
+    .action-button-add:hover { background-color: #0056b3; }
+    .action-button-delete { background-color: #dc3545; color: white; }
+    .action-button-delete:hover { background-color: #c82333; }
+    .action-button-clear { background-color: #ffc107; color: #333; }
+    .action-button-clear:hover { background-color: #e0a800; }
+    .action-button-utility { background-color: #6c757d; color: white; }
+    .action-button-utility:hover { background-color: #5a6268; }
+
+    /* Controls for Stats and Items tabs */
+    .tab-controls {
+        width: 90%;
+        max-width: 650px;
+        margin: 5px auto 10px auto;
+        display: flex;
+        justify-content: flex-end; /* Aligns button to the right */
+        gap: 10px;
+    }
+    .tab-controls .action-btn {
+        flex-basis: auto; /* Override spell-tab width */
+        min-width: 120px;
+        padding: 8px 12px;
+    }
+   
+    /* Spell Column Controls Section Styling */
+    .spell-column-controls {
+        display: flex;
+        flex-direction: column; 
+        align-items: stretch; 
+        padding: 10px 0;
+        margin-bottom: 15px;
+        width: 95%;
+        box-sizing: border-box;
+        margin-left: auto;
+        margin-right: auto;
+        gap: 10px; 
+    }
+   
+    .controls-line-1 { 
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap; 
+        gap: 10px; 
+    }
+
+    .spell-column-controls h3 { 
+        margin: 0; 
+        font-size: 1.2em;
+        color: #eee;
+        font-weight: normal;
+        white-space: nowrap;
+        flex-shrink: 0; 
+    }
+   
+    .spell-column-controls .specialty-dropdown-container { 
+        display: flex;
+        align-items: center;
+        margin-bottom: 0; 
+        width: auto; 
+        justify-content: flex-start; 
+        flex-grow: 1; 
+        min-width: 220px; 
+    }
+    .spell-column-controls .specialty-dropdown-container label {
+        margin-right: 8px; 
+        white-space: nowrap;
+        font-size: 1em; 
+    }
+    .action-select { /* This is the specialty dropdown */
+        padding: 5px;
+        font-size: 0.9em; 
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 3px;
+        min-width: 150px; 
+    }
+
+    .spell-column-controls .buttons-group {
+        display: flex;
+        gap: 8px; 
+        justify-content: center; 
+        flex-wrap: wrap; 
+        align-items: stretch; 
+        width: 100%; 
+    }
+   
+    /* Responsive Nav Bar Tabs */
+    @media (max-width: 768px) { 
+        .nav-bar { flex-direction: column; }
+        .nav-bar button { font-size: 14px; padding: 9px 10px; }
+    }
+
+    /* Responsive Spell Column Controls & Action Buttons */
+    @media (max-width: 768px) { 
+         .spell-column-controls {
+            padding: 10px 0; 
+         }
+        .controls-line-1 { 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 10px;
+            width: 100%;
+        }
+        .spell-column-controls h3 {
+            text-align: center;
+            width: auto; 
+        }
+        .spell-column-controls .specialty-dropdown-container {
+            justify-content: center; 
+            width: 100%;
+            max-width: 300px; 
+        }
+        #spells .action-btn { 
+            flex-basis: calc((100% - (2 * 8px)) / 3 - 1px); 
+            min-width: 90px; 
+        }
+    }
+
+    @media (max-width: 520px) { 
+        #spells .action-btn {
+            flex-basis: calc((100% - (1 * 8px)) / 2 - 1px);
+            min-width: 100px; 
+        }
+    }
+
+    @media (max-width: 380px) { 
+        .spell-column-controls .buttons-group {
+            flex-direction: column; 
+            align-items: center; 
+            gap: 6px; 
+        }
+        #spells .action-btn {
+            width: 90%; 
+            margin-bottom: 6px;
+            flex-basis: auto; 
+            min-width: auto; 
+        }
+        #spells .action-btn:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    /* Main Content Area */
+    .content { display: none; flex-grow: 1; }
+    .content.active {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        overflow-y: auto; 
+        width: 100%; 
+        box-sizing: border-box;
+    }
+
+    /* Stats & Items Tab Common Section Styling */
+    #stats h3, #items h3 { 
+        color: #4db8ff;
+        font-size: 1.5em; 
+        margin-top: 10px; /* Reduced margin */
+        margin-bottom: 15px;
+        border-bottom: 1px solid #555;
+        padding-bottom: 8px;
+        text-align: center; 
+        width: 100%; /* Take full width of container */
+    }
+    .stats-section-container { 
+        width: 90%;
+        max-width: 650px; 
+        margin: 15px auto; 
+        padding: 20px;
+        background-color: #1e1e1e; 
+        border: 1px solid #333;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* Stats Tab Specifics */
+     #stats .health-container { 
+        display: flex;
+        justify-content: space-around; 
+        align-items: flex-start;
+        flex-wrap: wrap; 
+        gap: 20px;
+    }
+    .stats-group { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 8px; 
+        font-size: 16px; 
+        align-items: center; 
+    }
+    .stats-group label { font-size: 1.1em; margin-bottom: 5px; }
+    .stats-group input[type="number"] { 
+        padding: 8px; font-size: 1em; width: 80px; 
+        background-color: #333; color: white; border: 1px solid #555; 
+        border-radius: 3px; text-align: center;
+    }
+   
+    #stats .checkbox-group { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+        gap: 10px; 
+        font-size: 0.95em; 
+    }
+    #stats .checkbox-group label { 
+        display: flex; align-items: center; cursor: pointer;
+        background-color: #2c2c2c; padding: 10px; border-radius: 4px;
+        border: 1px solid #444; transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    #stats .checkbox-group label:hover {
+        background-color: #383838; border-color: #666;
+    }
+    #stats .checkbox-group label.active-buff { 
+        background-color: #2a4b27; border-color: #3c763d; 
+        color: #e6ffe6; 
+    }
+    #stats .checkbox-group input[type="checkbox"] {
+        margin-right: 10px; transform: scale(1.2); accent-color: #007bff; 
+    }
+   
+    #stats .list-section { 
+        display: flex; flex-direction: column; gap: 10px; 
+    }
+    #stats .list-entry { 
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 10px; padding: 10px 5px; 
+        border-bottom: 1px solid #383838; 
+    }
+    #stats .list-entry:last-child { border-bottom: none; }
+    #stats .entry-name { 
+        font-size: 1em; flex-grow: 1; flex-basis: 160px; margin-right: 10px; 
+    }
+    
+    /* Styles for Remaining/Total inputs */
+    #stats .list-entry .input-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: nowrap;
+        flex-shrink: 0;
+    }
+    #stats .input-field {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    #stats .input-field label {
+        font-size: 0.8em;
+        color: #bbb;
+        margin-bottom: 3px;
+        white-space: nowrap;
+    }
+    #stats .input-separator {
+        font-size: 1.2em;
+        color: #888;
+        padding-top: 18px;
+    }
+    #stats .rem-input, #stats .total-input {
+        width: 55px;
+        padding: 6px;
+        font-size: 0.9em;
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+        border-radius: 3px;
+        text-align: center;
+    }
+    
+    /* Items Tab Styling */
+    #items .bound-items-note {
+        text-align: center; font-size: 0.9em; color: #aaa; margin-bottom: 15px;
+    }
+    #items .same-as-day1-checkbox-container { 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 0; 
+        margin-bottom: 15px; 
+    }
+    #items .same-as-day1-checkbox-container label {
+        font-size: 0.95em;
+        color: #ccc;
+    }
+    #items .same-as-day1-checkbox-container input[type="checkbox"] {
+        transform: scale(1.3);
+        accent-color: #007bff;
+    }
+
+    #items .item-entry {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 10px 15px;
+        padding: 10px 0; 
+        border-bottom: 1px solid #383838;
+        align-items: flex-start;
+    }
+    #items .item-entry:last-child { border-bottom: none; }
+
+    #items .item-field { 
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    #items .item-field label {
+        font-size: 0.85em; 
+        color: #bbb;
+        margin-bottom: 2px;
+    }
+    #items .item-field input[type="text"],
+    #items .item-number-input, 
+    #items .item-field textarea {
+        width: 100%;
+        padding: 8px;
+        font-size: 0.95em;
+        background-color: #282828;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 3px;
+        box-sizing: border-box;
+    }
+     #items .item-number-field { 
+        grid-column: 1 / 2; 
+    }
+    #items .item-number-input {
+        text-align: center;
+    }
+    #items .item-details-group { 
+        grid-column: 2 / 3; 
+        display: flex;
+        flex-direction: column;
+        gap: 12px; 
+    }
+    #items .item-expiration input[type="text"] {
+        max-width: 160px;
+    }
+    #items .item-field textarea.description-input {
+        min-height: 60px; 
+        resize: vertical;
+    }
+   
+    #items .additional-items-section textarea {
+        width: 100%;
+        min-height: 100px; 
+        padding: 10px;
+        font-size: 0.95em;
+        background-color: #282828;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 3px;
+        box-sizing: border-box;
+        resize: vertical;
+        margin-top: 10px;
+    }
+     @media (max-width: 600px) {
+         #items .item-entry {
+            grid-template-columns: 1fr; 
+         }
+        #items .item-number-field, #items .item-details-group {
+            grid-column: auto;
+         }
+         #items .item-number-field {
+            width: auto; 
+            margin-bottom: 10px; 
+         }
+    }
+   
+    /* Grid System for Spells */
+    .grid-container {
+        flex-grow: 1; overflow-y: auto; overflow-x: hidden;  
+        width: 100%; max-width: 100vw; padding: 0 20px;     
+        box-sizing: border-box; padding-bottom: 15px; 
+    }
+    .grid { 
+        display: grid; grid-template-columns: 50px 1fr; 
+        gap: 10px; width: 100%;         
+    }
+    .label { 
+        font-size: 14px; font-weight: bold; text-align: right;
+        align-self: flex-start; padding-top: 10px; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; width: 50px; 
+        padding-right: 5px; box-sizing: border-box;
+    }
+    .button-row { 
+        display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; 
+    }
+    .spell-slot-wrapper {
+        position: relative; display: flex;     
+        flex-basis: calc((100% - (3 * 10px)) / 4 - 1px); 
+        flex-grow: 0; flex-shrink: 0; min-width: 90px; box-sizing: border-box;
+    }
+    .button { 
+        padding: 8px 6px; font-size: 13px; min-height: 48px; line-height: 1.3;     
+        color: white; background-color: green; border: none; border-radius: 5px;
+        cursor: pointer; white-space: normal; overflow: hidden; word-break: break-word; 
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; box-sizing: border-box; width: 100%; 
+        user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; 
+    }
+    .button.grey { background-color: grey; }
+
+    @media (max-width: 768px) { 
+        .spell-slot-wrapper { flex-basis: calc((100% - (2 * 10px)) / 3 - 1px); min-width: 80px; }
+        .button { font-size: 12px; min-height: 44px; }
+    }
+    @media (max-width: 520px) { 
+        .label { font-size: 13px; padding-top: 6px; }
+        .spell-slot-wrapper { flex-basis: calc((100% - (1 * 10px)) / 2 - 1px); min-width: 70px; }
+        .button { font-size: 11px; padding: 5px 3px; min-height: 40px; }
+    }
+   
+    .item-dropdown {
+        position: absolute; top: 100%; left: 0; right: 0; 
+        background-color: #444; color: white; padding: 5px 0;
+        border-radius: 5px; z-index: 10; display: none;
+        min-width: 100%; box-sizing: border-box;
+    }
+    .item-dropdown select {
+        width: 100%; padding: 8px; font-size: 14px;
+        background-color: #555; color: white; border: none;
+        border-radius: 4px; cursor: pointer;
+    }
+    .item-dropdown select option { background-color: #555; color: white; padding: 4px 8px; }
+
+    #info { padding: 20px; line-height: 1.6; font-size: 15px; }
+    #info h2, #info h3 {
+        color: #4db8ff; margin-top: 20px; margin-bottom: 10px;
+        border-bottom: 1px solid #555; padding-bottom: 5px;
+    }
+    #info h2 { font-size: 1.7em; }
+    #info h3 { font-size: 1.3em; }
+    #info ul { list-style-type: disc; margin-left: 25px; padding-left: 0; }
+    #info ul ul { list-style-type: circle; margin-top: 5px; }
+    #info li { margin-bottom: 10px; }
+    #info p { margin-bottom: 15px; }
+    #info strong { color: #ffc107; }
+    #info code {
+        background-color: #333; padding: 2px 5px; border-radius: 3px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+   
+    /* Character Modal Styling */
+    .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 100; 
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.6);
+    }
+    .modal-content {
+        background-color: #282828;
+        margin: 10% auto;
+        padding: 25px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #555;
+        padding-bottom: 15px;
+    }
+    .modal-header h2 {
+        margin: 0;
+        color: #4db8ff;
+    }
+    .modal-close-btn {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .modal-close-btn:hover,
+    .modal-close-btn:focus {
+        color: white;
+    }
+    #character-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        max-height: 30vh;
+        overflow-y: auto;
+    }
+    .character-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 8px;
+        border-bottom: 1px solid #3a3a3a;
+        gap: 10px;
+    }
+    .character-item:last-child {
+        border-bottom: none;
+    }
+    .character-name {
+        flex-grow: 1;
+        font-size: 1.1em;
+    }
+    .character-item button {
+        padding: 5px 10px;
+        font-size: 0.9em;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .char-btn-load { background-color: #28a745; color: white; }
+    .char-btn-load:hover { background-color: #218838; }
+    .char-btn-rename { background-color: #ffc107; color: #333; }
+    .char-btn-rename:hover { background-color: #e0a800; }
+    .char-btn-delete { background-color: #dc3545; color: white; }
+    .char-btn-delete:hover { background-color: #c82333; }
+
+    .modal-footer {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        border-top: 1px solid #555;
+        padding-top: 20px;
+    }
+    .modal-footer input[type="text"] {
+        flex-grow: 1;
+        padding: 10px;
+        background-color: #333;
+        border: 1px solid #555;
+        color: white;
+        border-radius: 4px;
+    }
+    .modal-footer button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+     .modal-footer button:hover {
+        background-color: #0056b3;
+     }
+
+</style>
+</head>
+<body>
+    <h1 id="main-title" style="text-align: center; margin: 10px;">Character Tracker</h1>
+
+    <div class="nav-bar">
+        <div class="nav-group-tabs">
+            <button onclick="showTab('stats')">Stats</button> 
+            <button onclick="showTab('items')">Items</button> 
+            <button onclick="showTab('spells')">Spells</button>
+            <button onclick="showTab('info')">Info</button> 
+        </div>
+        <div class="nav-group-actions">
+            <button class="action-button-save" onclick="saveData()">Save</button>
+            <button class="action-button-characters" onclick="openCharacterModal()">Characters</button>
+        </div>
+    </div>
+
+    <div id="stats" class="content"> 
+        <div class="tab-controls">
+            <button class="action-btn action-button-clear" onclick="confirmResetStats()">Reset All Stats</button>
+        </div>
+        <div class="stats-section-container health-container">
+            <h3>Health</h3> 
+            <div class="stats-group">
+                <label for="body">Body:</label>
+                <input id="body" type="number" value="0" min="0">
+            </div>
+            <div class="stats-group">
+                <label for="armor">Armor:</label>
+                <input id="armor" type="number" value="0" min="0">
+            </div>
+        </div>
+
+        <div class="stats-section-container buffs-protections-container">
+            <h3>Buffs and Protections</h3>
+            <div class="tab-controls" style="margin-top: 0; margin-bottom: 15px;">
+                <button id="buff-toggle-btn" class="action-btn action-button-utility" onclick="toggleListVisibility(this)" data-list-class="buffs-protections-container" data-state="shown">Hide inactive</button>
+            </div>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="buff-bless"> Bless</label>
+                <label><input type="checkbox" id="buff-defend"> Defend</label>
+                <label><input type="checkbox" id="buff-elemental-blade"> Elemental Blade</label>
+                <label><input type="checkbox" id="buff-elemental-shield"> Elemental Shield</label>
+                <label><input type="checkbox" id="buff-enchant-blade"> Enchant Blade</label>
+                <label><input type="checkbox" id="buff-endow"> Endow</label>
+                <label><input type="checkbox" id="buff-force-armor"> Force Armor</label>
+                <label><input type="checkbox" id="buff-force-blade"> Force Blade</label>
+                <label><input type="checkbox" id="buff-greater-bless"> Greater Bless</label>
+                <label><input type="checkbox" id="buff-greater-endow"> Greater Endow</label>
+                <label><input type="checkbox" id="buff-reflect-magic"> Reflect Magic</label>
+                <label><input type="checkbox" id="buff-shield"> Shield</label>
+                <label><input type="checkbox" id="buff-spirit-armor"> Spirit Armor</label>
+                <label><input type="checkbox" id="buff-stoneskin"> Stoneskin</label>
+                <label><input type="checkbox" id="buff-storm-blade"> Storm Blade</label>
+                <label><input type="checkbox" id="buff-superior-bless"> Superior Bless</label>
+                <label><input type="checkbox" id="buff-toxin-shield"> Toxin Shield</label>
+                <label><input type="checkbox" id="buff-vorpal-coating-1"> Vorpal Coating +1</label>
+                <label><input type="checkbox" id="buff-vorpal-coating-2"> Vorpal Coating +2</label>
+                <label><input type="checkbox" id="buff-vorpal-coating-3"> Vorpal Coating +3</label>
+            </div>
+        </div>
+
+        <div class="stats-section-container combat-abilities-container">
+            <h3>Combat Abilities</h3>
+            <div class="tab-controls" style="margin-top: 0; margin-bottom: 15px;">
+                <button id="abilities-toggle-btn" class="action-btn action-button-utility" onclick="toggleListVisibility(this)" data-list-class="abilities-list" data-state="shown">Hide Unused</button>
+                <button class="action-btn action-button-clear" onclick="resetStatList('abilities-list')">Reset Uses</button>
+            </div>
+            <div class="list-section abilities-list">
+                <div class="list-entry ability-entry">
+                    <span class="entry-name ability-name">Assassinate</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="uses-assassinate-rem">Remaining</label>
+                            <input type="number" id="uses-assassinate-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="uses-assassinate-total">Total</label>
+                            <input type="number" id="uses-assassinate-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry ability-entry">
+                    <span class="entry-name ability-name">Critical Slay/Parry</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="uses-crit-slay-rem">Remaining</label>
+                            <input type="number" id="uses-crit-slay-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="uses-crit-slay-total">Total</label>
+                            <input type="number" id="uses-crit-slay-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry ability-entry">
+                    <span class="entry-name ability-name">Fatal Blow/Parry</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="uses-fatal-blow-rem">Remaining</label>
+                            <input type="number" id="uses-fatal-blow-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="uses-fatal-blow-total">Total</label>
+                            <input type="number" id="uses-fatal-blow-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry ability-entry">
+                    <span class="entry-name ability-name">Fatal Shield Parry</span>
+                     <div class="input-group">
+                        <div class="input-field">
+                            <label for="uses-fatal-shield-parry-rem">Remaining</label>
+                            <input type="number" id="uses-fatal-shield-parry-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="uses-fatal-shield-parry-total">Total</label>
+                            <input type="number" id="uses-fatal-shield-parry-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry ability-entry">
+                    <span class="entry-name ability-name">Shield Parry</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="uses-shield-parry-rem">Remaining</label>
+                            <input type="number" id="uses-shield-parry-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="uses-shield-parry-total">Total</label>
+                            <input type="number" id="uses-shield-parry-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+        <div class="stats-section-container resists-container">
+            <h3>Resists</h3>
+            <div class="tab-controls" style="margin-top: 0; margin-bottom: 15px;">
+                <button id="resists-toggle-btn" class="action-btn action-button-utility" onclick="toggleListVisibility(this)" data-list-class="resists-list" data-state="shown">Hide Unused</button>
+                <button class="action-btn action-button-clear" onclick="resetStatList('resists-list')">Reset Uses</button>
+            </div>
+            <div class="list-section resists-list">
+                 <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Charm</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-charm-rem">Remaining</label>
+                            <input type="number" id="resist-charm-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-charm-total">Total</label>
+                            <input type="number" id="resist-charm-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Charm/Charm Break</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-charm-break-rem">Remaining</label>
+                            <input type="number" id="resist-charm-break-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-charm-break-total">Total</label>
+                            <input type="number" id="resist-charm-break-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Confining</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-confining-rem">Remaining</label>
+                            <input type="number" id="resist-confining-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-confining-total">Total</label>
+                            <input type="number" id="resist-confining-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Disease</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-disease-rem">Remaining</label>
+                            <input type="number" id="resist-disease-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-disease-total">Total</label>
+                            <input type="number" id="resist-disease-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Elemental</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-elemental-rem">Remaining</label>
+                            <input type="number" id="resist-elemental-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-elemental-total">Total</label>
+                            <input type="number" id="resist-elemental-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Elemental X</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-elemental-x-rem">Remaining</label>
+                            <input type="number" id="resist-elemental-x-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-elemental-x-total">Total</label>
+                            <input type="number" id="resist-elemental-x-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Emotion</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-emotion-rem">Remaining</label>
+                            <input type="number" id="resist-emotion-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-emotion-total">Total</label>
+                            <input type="number" id="resist-emotion-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Healing/Curing</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-healing-curing-rem">Remaining</label>
+                            <input type="number" id="resist-healing-curing-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-healing-curing-total">Total</label>
+                            <input type="number" id="resist-healing-curing-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Mind Affecting</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-mind-affecting-rem">Remaining</label>
+                            <input type="number" id="resist-mind-affecting-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-mind-affecting-total">Total</label>
+                            <input type="number" id="resist-mind-affecting-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Metabolic</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-metabolic-rem">Remaining</label>
+                            <input type="number" id="resist-metabolic-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-metabolic-total">Total</label>
+                            <input type="number" id="resist-metabolic-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Natural Confining</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-natural-confining-rem">Remaining</label>
+                            <input type="number" id="resist-natural-confining-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-natural-confining-total">Total</label>
+                            <input type="number" id="resist-natural-confining-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                 <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Necromancy/Chaos</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-necromancy-chaos-rem">Remaining</label>
+                            <input type="number" id="resist-necromancy-chaos-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-necromancy-chaos-total">Total</label>
+                            <input type="number" id="resist-necromancy-chaos-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Sleep</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-sleep-rem">Remaining</label>
+                            <input type="number" id="resist-sleep-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-sleep-total">Total</label>
+                            <input type="number" id="resist-sleep-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="list-entry resist-entry">
+                    <span class="entry-name resist-name">Toxin</span>
+                    <div class="input-group">
+                        <div class="input-field">
+                            <label for="resist-toxin-rem">Remaining</label>
+                            <input type="number" id="resist-toxin-rem" min="0" value="0" class="rem-input">
+                        </div>
+                        <span class="input-separator">/</span>
+                        <div class="input-field">
+                            <label for="resist-toxin-total">Total</label>
+                            <input type="number" id="resist-toxin-total" min="0" value="0" class="total-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="items" class="content">
+        <div class="tab-controls">
+            <button class="action-btn action-button-clear" onclick="confirmResetItems()">Reset All Items</button>
+        </div>
+        <div class="stats-section-container bound-items-section"> 
+            <h3>Bound Items</h3>
+            <p class="bound-items-note">Players can only have 8 items bound to them at once.</p>
+            <div class="sub-nav-bar">
+                <button class="active-sub-nav" onclick="showItemDay(1)">Day 1</button>
+                <button onclick="showItemDay(2)">Day 2</button>
+            </div>
+            <div id="bound-items-day1" class="sub-content active-sub-content">
+            </div>
+            <div id="bound-items-day2" class="sub-content">
+                <div class="same-as-day1-checkbox-container">
+                    <label for="same-as-day1">Same as Day 1?</label>
+                    <input type="checkbox" id="same-as-day1" name="same-as-day1">
+                </div>
+            </div>
+        </div>
+        <div class="stats-section-container additional-items-section">
+            <h3>Additional Items</h3>
+            <textarea id="additional-items-text" rows="10" placeholder="List other carried items, notes, gold, etc."></textarea>
+        </div>
+    </div>
+
+    <div id="spells" class="content">
+        <div class="sub-nav-bar">
+            <button class="active-sub-nav" onclick="showSpellList('primary')">Primary</button>
+            <button onclick="showSpellList('secondary')">Secondary</button>
+            <button onclick="showSpellList('tertiary')">Tertiary</button>
+        </div>
+        <div class="spell-column-controls">
+            <div class="controls-line-1">
+                <h3>Spell List</h3>
+                <div class="specialty-dropdown-container">
+                    <label for="spell-class-select">Specialty:</label>
+                    <select id="spell-class-select" class="action-select" onchange="handleSpecialtyChange(this.value)">
+                        <option value="">-- Select Specialty --</option>
+                        <option value="Celestial Generalist">Celestial Generalist</option>
+                        <option value="Confinist">Confinist</option>
+                        <option value="Druid">Druid</option>
+                        <option value="Earth Generalist">Earth Generalist</option>
+                        <option value="Elementalist">Elementalist</option>
+                        <option value="Healer">Healer</option>
+                        <option value="Necromancer">Necromancer</option>
+                    </select>
+                </div>
+            </div>
+            <div class="buttons-group">
+                <button class="action-btn action-button-add" onclick="confirmAddColumn()">Add Slot</button>
+                <button class="action-btn action-button-delete" onclick="confirmDeleteColumn()">Delete Slot</button>
+                <button class="action-btn action-button-clear" onclick="confirmClearCurrentTabData()">Reset List</button>
+                <button class="action-btn action-button-utility" onclick="confirmMakeAllActive()">Make all active</button>
+                <button class="action-btn action-button-utility" onclick="confirmResetSpells()">Reset spells</button>
+            </div>
+        </div>
+        <div id="spell-list-container">
+            <div id="primary" class="spell-list-content">
+                 <div class="grid-container">
+                    <div class="grid" id="primary-grid"></div>
+                </div>
+            </div>
+            <div id="secondary" class="spell-list-content">
+                <div class="grid-container">
+                    <div class="grid" id="secondary-grid"></div>
+                </div>
+            </div>
+            <div id="tertiary" class="spell-list-content">
+                 <div class="grid-container">
+                    <div class="grid" id="tertiary-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="info" class="content">
+        <h2>How to Use This Character Tracker</h2>
+        <p>This application helps you track character stats, items, and spells for up to three different character builds or spell lists.</p>
+       
+        <h3>Stats Tab:</h3>
+        <ul>
+            <li>Input numerical values for your character's <strong>Body</strong> and <strong>Armor</strong> points in the "Health" section.</li>
+            <li>Use the <strong>checkboxes</strong> under "Buffs and Protections" to track active effects. Checked items will turn green. Use "Hide inactive" to filter the list.</li>
+            <li>Track uses for your <strong>Combat Abilities & Resists</strong>. Each entry has a "Remaining" and "Total" field.</li>
+            <li>Use the <strong>"Hide Unused"</strong> button in a section to hide items with a "Total" of 0. The button will change to "Show all" to reverse the action.</li>
+            <li>Use the <strong>"Reset Uses"</strong> button to restore the "Remaining" value to match the "Total" value for all items in that section.</li>
+        </ul>
+       
+        <h3>Items Tab:</h3>
+        <ul>
+            <li><strong>Bound Items:</strong> This section is divided into "Day 1" and "Day 2" sub-tabs.</li>
+            <li><strong>Additional Items:</strong> Use the larger text area to list any other carried items, equipment notes, currency, or miscellaneous inventory details.</li>
+        </ul>
+
+        <h3>Spells Tab:</h3>
+        <ul>
+            <li>Use the <strong>Primary, Secondary, and Tertiary</strong> sub-tabs to switch between your spell lists.</li>
+            <li><strong>Selecting a Specialty:</strong> Use the "Specialty" dropdown to select your character's class for the currently viewed spell list. This is required before you can select specific spells.</li>
+            <li><strong>Spell Slots Management:</strong> Use the action buttons (Add Slot, Delete Slot, etc.) to manage the spell slots for the currently active list.</li>
+            <li><strong>Interacting with Spell Slots:</strong>
+                <ul>
+                    <li><strong>Single-click/tap</strong> to toggle a spell as used (grey) or available (green).</li>
+                    <li><strong>Double-click (PC) or tap-and-hold (Mobile)</strong> to open the spell selection dropdown for a slot.</li>
+                </ul>
+            </li>
+        </ul>
+        <p><em>This tracker is designed for quick reference during your game sessions.</em></p>
+    </div>
+
+    <div id="character-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manage Characters</h2>
+                <span class="modal-close-btn" onclick="closeCharacterModal()">&times;</span>
+            </div>
+            <ul id="character-list">
+                </ul>
+            <div class="modal-footer">
+                <input type="text" id="new-character-name" placeholder="Enter new character name...">
+                <button onclick="createCharacter()">Create New</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let activeCharacterName = null;
+    const DB_KEY = 'larpTrackerCharacters';
+
+    const defaultColumnCount = 4;
+    let spellTabsState = {
+        primary: { specialty: '', columnCount: defaultColumnCount },
+        secondary: { specialty: '', columnCount: defaultColumnCount },
+        tertiary: { specialty: '', columnCount: defaultColumnCount }
+    };
+
+    // Updated classItems with level-specific spells
+    const classItems = {
+        'Celestial Generalist': {
+            1: ['Disarm', 'Magic Missile', 'Shield'],
+            2: ['Armor', 'Detect Magic', 'Endow', 'Lightning Bolt', 'Mental Jab *', 'Repulse'],
+            3: ['Destroy', 'Ice Bolt', 'Trap', 'Truth/Lie'],
+            4: ['Bind/Unbind', 'Enchanted Blade', 'Flame Bolt', 'Greater Endow'],
+            5: ['Mind Blast', 'Mute', 'Spirit Armor', 'Trance'],
+            6: ['Destroy Armor', 'Dispel Greater Magic', 'Enrage', 'Lightning Storm', 'Reflect Magic', 'Web'],
+            7: ['Destroy Mind', 'Drain Life', 'Friendship', 'Ice Storm', 'Mental Fortress', 'Wall of Force', 'Wither Limb', 'Wizard’s Lock'],
+            8: ['Defend', 'Disjunction', 'Dragon’s Breath'],
+            9: ['Circle of Protection', 'Doom', 'Ward']
+        },
+        'Confinist': {
+            1: ['Disarm', 'Eldritch Grasp', 'Shield'],
+            2: ['Armor', 'Detect Magic', 'Endow', 'Repulse'],
+            3: ['Destroy', 'Trap', 'Truth/Lie'],
+            4: ['Bind/Unbind', 'Enchanted Blade', 'Force Blade', 'Greater Endow', 'Slow'],
+            5: ['Mind Blast', 'Mute', 'Spirit Armor', 'Trance'],
+            6: ['Destroy Armor', 'Dispel Greater Magic', 'Reflect Magic', 'Web'],
+            7: ['Drain Life', 'Force Armor', 'Friendship', 'Wall of Force', 'Wither Limb', 'Wizard’s Lock'],
+            8: ['Defend', 'Disjunction', 'Force Shield', 'Imprison'],
+            9: ['Circle of Protection', 'Doom', 'Shackle', 'Ward']
+        },
+        'Elementalist': {
+            1: ['Disarm', 'Elemental Dart', 'Shield', 'Light'],
+            2: ['Armor', 'Detect Magic', 'Elemental Burst', 'Endow', 'Lightning Bolt', 'Repulse'],
+            3: ['Destroy', 'Elemental Forge', 'Ice Bolt', 'Truth/Lie'],
+            4: ['Elemental Blade', 'Enchanted Blade', 'Flame Bolt', 'Greater Endow', 'Wall of Elements'],
+            5: ['Elemental Arrow', 'Elemental Maelstrom', 'Fire/Cold/Lightning/Earth Shield', 'Mute', 'Spirit Armor', 'Trance'],
+            6: ['Destroy Armor', 'Dispel Greater Magic', 'Lightning Storm', 'Reflect Magic'],
+            7: ['Drain Life', 'Elemental Attunement', 'Friendship', 'Ice Storm', 'Wither Limb', 'Wizard’s Lock', 'Stoneskin'],
+            8: ['Defend', 'Disjunction', 'Elemental Fury', 'Elemental Shield', 'Storm Blade'],
+            9: ['Circle of Protection', 'Elemental Blast', 'Ward']
+        },
+        'Earth Generalist': {
+            1: ['Bless', 'Cure / Cause Light Wounds', 'Disarm', 'Light'],
+            2: ['Cure / Cause Wounds', 'Endow', 'Repel Undead', 'Repulse'],
+            3: ['Cure / Cause Disease', 'Destroy', 'Fear / Remove Fear', 'Greater Bless', 'Trap', 'Truth/Lie'],
+            4: ['Bind/Unbind', 'Cure / Cause Serious Wounds', 'Greater Endow', 'Weakness'],
+            5: ['Mute', 'Spirit Armor', 'Toxin Shield', 'Trance'],
+            6: ['Cure / Cause Critical Wounds', 'Curse of Ineptitude', 'Destroy Armor', 'Dispel Greater Magic', 'Mistform', 'Reflect Magic'],
+            7: ['Drain Life', 'Friendship', 'Remedy', 'Restore Limb / Wither Limb'],
+            8: ['Curse / Remove Curse', 'Defend', 'Paralyze / Unparalyze', 'Renew / Waste', 'Stone Web'],
+            9: ['Circle of Protection', 'Life / Death', 'Proscribe Creature']
+        },
+        'Druid': {
+            1: ['Bless', 'Cure / Cause Light Wounds', 'Disarm', 'Light'],
+            2: ['Control Animal', 'Cure / Cause Wounds', 'Endow', 'Repel Undead'],
+            3: ['Cure / Cause Disease', 'Destroy', 'Entangle', 'Fear / Remove Fear', 'Greater Bless', 'Trap', 'Truth / Lie'],
+            4: ['Bind/Unbind', 'Cure / Cause Serious Wounds', 'Greater Endow', 'Wall of Thorns', 'Weakness'],
+            5: ['Mute', 'Spirit Armor', 'Toxin Shield', 'Trance'],
+            6: ['Cure / Cause Critical Wounds', 'Destroy Armor', 'Dispel Greater Magic', 'Mistform', 'Reflect Magic'],
+            7: ['Drain Life', 'Friendship', 'Insect Swarm', 'Remedy', 'Restore Limb / Wither Limb', 'Spirit of the Ent', 'Stoneskin'],
+            8: ['Curse / Remove Curse', 'Defend', 'Paralyze / Unparalyze', 'Renew / Waste'],
+            9: ['Banish', 'Circle of Protection', 'Life / Death', 'Nature’s Transformation', 'Proscribe Creature']
+        },
+        'Healer': {
+            1: ['Bless', 'Disarm', 'Heal Light Wounds', 'Light'],
+            2: ['Endow', 'Heal Wounds', 'Repel Undead', 'Repulse'],
+            3: ['Cleanse Disease', 'Destroy', 'Fear / Remove Fear', 'Greater Bless', 'Healing Hands', 'Trap', 'Truth / Lie'],
+            4: ['Bind/Unbind', 'Greater Endow', 'Heal Serious Wounds', 'Preserve', 'Turn Undead', 'Weakness'],
+            5: ['Mute', 'Spirit Armor', 'Superior Bless', 'Toxin Shield', 'Trance'],
+            6: ['Destroy Armor', 'Dispel Greater Magic', 'Heal Critical Wounds', 'Mistform', 'Reflect Magic', 'Zone of Life'],
+            7: ['Destroy Undead', 'Friendship', 'Remedy', 'Restore Limb / Wither Limb'],
+            8: ['Curse / Remove Curse', 'Defend', 'Heal Mortal Wounds', 'Paralyze / Unparalyze'],
+            9: ['Annihilate Undead', 'Circle of Protection', 'Proscribe Creature', 'Revive']
+        },
+        'Necromancer': {
+            1: ['Bless', 'Cause Light Wounds', 'Disarm', 'Inflict Light Wounds', 'Light'],
+            2: ['Cause Wounds', 'Elude Undead', 'Endow', 'Inflict Wounds'],
+            3: ['Destroy', 'Fear', 'Greater Bless', 'Inflict Disease', 'Trap', 'Wraith Touch', 'Truth / Lie'],
+            4: ['Cause Serious Wounds', 'Control Undead', 'Decay', 'Greater Endow', 'Inflict Serious Wounds', 'Preserve', 'Weakness'],
+            5: ['Mute', 'Soul Drain', 'Spirit Armor', 'Toxin Shield'],
+            6: ['Cause Critical Wounds', 'Destroy Armor', 'Dispel Greater Magic', 'Inflict Critical Wounds', 'Mistform', 'Reflect Magic', 'Zone of Death'],
+            7: ['Corrupt Memory', 'Create / Destroy Undead', 'Drain Life', 'Greater Control Undead', 'Restore Limb / Wither Limb', 'Stoneskin'],
+            8: ['Curse / Remove Curse', 'Defend', 'Inflict Mortal Wounds', 'Paralyze / Unparalyze', 'Waste'],
+            9: ['Circle of Protection', 'Create Ghoul', 'Death', 'Imbue Death', 'Proscribe Creature']
+        }
+    };
+
+    function getOrdinal(n) {
+        if (n <= 0) return String(n);
+        const s = ["th", "st", "nd", "rd"];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    // Returns the top-level active tab, or the active sub-tab if on the Spells tab.
+    function getActiveTabId() {
+        const activeMainContent = document.querySelector('.content.active');
+        if (!activeMainContent) return null;
+
+        if (activeMainContent.id === 'spells') {
+            const activeSpellList = activeMainContent.querySelector('.spell-list-content.active-spell-list');
+            return activeSpellList ? activeSpellList.id : null;
+        }
+        return activeMainContent.id;
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.nav-bar .nav-group-tabs button').forEach(b => b.classList.remove('active'));
+
+        const currentTabContent = document.getElementById(tabId);
+        if (currentTabContent) {
+            currentTabContent.classList.add('active');
+        }
+        const activeNavButton = document.querySelector(`.nav-bar .nav-group-tabs button[onclick="showTab('${tabId}')"]`);
+        if (activeNavButton) {
+            activeNavButton.classList.add('active');
+        }
+
+        if (tabId === 'items') {
+             const activeSubNav = currentTabContent.querySelector('.sub-nav-bar button.active-sub-nav');
+             if (!activeSubNav) showItemDay(1);
+        } else if (tabId === 'spells') {
+            const activeSubNav = currentTabContent.querySelector('.sub-nav-bar button.active-sub-nav');
+            if (!activeSubNav) showSpellList('primary');
+        }
+    }
+
+    function showItemDay(dayNumber) {
+        const itemsTabContent = document.getElementById('items');
+        if (!itemsTabContent) return;
+
+        itemsTabContent.querySelectorAll('.sub-content').forEach(sc => sc.classList.remove('active-sub-content'));
+        itemsTabContent.querySelectorAll('.sub-nav-bar button').forEach(btn => btn.classList.remove('active-sub-nav'));
+
+        document.getElementById(`bound-items-day${dayNumber}`).classList.add('active-sub-content'); 
+        itemsTabContent.querySelector(`.sub-nav-bar button[onclick*="showItemDay(${dayNumber}"]`).classList.add('active-sub-nav');
+    }
+
+    function showSpellList(listId) {
+        const spellsTabContent = document.getElementById('spells');
+        if (!spellsTabContent) return;
+
+        spellsTabContent.querySelectorAll('.spell-list-content').forEach(sc => sc.classList.remove('active-spell-list'));
+        spellsTabContent.querySelectorAll('.sub-nav-bar button').forEach(btn => btn.classList.remove('active-sub-nav'));
+
+        document.getElementById(listId).classList.add('active-spell-list');
+        spellsTabContent.querySelector(`.sub-nav-bar button[onclick*="showSpellList('${listId}')"]`).classList.add('active-sub-nav');
+        
+        const state = spellTabsState[listId];
+        document.getElementById('spell-class-select').value = state.specialty;
+    }
+
+    function createSingleSpellSlot(level) {
+        const slotWrapper = document.createElement('div');
+        slotWrapper.classList.add('spell-slot-wrapper');
+        const button = document.createElement('button');
+        button.classList.add('button');
+        button.textContent = 'Pick a spell';
+        button.dataset.level = level;
+
+        button.onclick = function() {
+            if (this.dataset.actionInProgress === 'true') { delete this.dataset.actionInProgress; return; }
+            this.classList.toggle('grey');
+        };
+        button.ondblclick = function() {
+            this.dataset.actionInProgress = 'true';
+            showItemDropdown(this);
+        };
+        let longPressTimer;
+        const longPressDuration = 700;
+        button.addEventListener('touchstart', function(event) {
+            const currentButton = this;
+            clearTimeout(longPressTimer);
+            longPressTimer = setTimeout(() => {
+                currentButton.dataset.actionInProgress = 'true';
+                showItemDropdown(currentButton);
+                longPressTimer = null;
+            }, longPressDuration);
+        }, { passive: false });
+        button.addEventListener('touchend', function() { clearTimeout(longPressTimer); });
+        button.addEventListener('touchmove', function() { clearTimeout(longPressTimer); });
+        button.oncontextmenu = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        };
+        const dropdownDiv = document.createElement('div');
+        dropdownDiv.classList.add('item-dropdown');
+        slotWrapper.appendChild(button);
+        slotWrapper.appendChild(dropdownDiv);
+        return slotWrapper;
+    }
+
+    function createSpellButtons(tabId) {
+        const gridElement = document.getElementById(`${tabId}-grid`);
+        if (!gridElement) return;
+        gridElement.innerHTML = '';
+        const totalSlotsForLevel = spellTabsState[tabId].columnCount;
+        for (let level = 9; level >= 1; level--) {
+            const labelDiv = document.createElement('div');
+            labelDiv.classList.add('label');
+            labelDiv.textContent = getOrdinal(level);
+            const buttonRowDiv = document.createElement('div');
+            buttonRowDiv.classList.add('button-row');
+            for (let i = 0; i < totalSlotsForLevel; i++) {
+                buttonRowDiv.appendChild(createSingleSpellSlot(level));
+            }
+            gridElement.appendChild(labelDiv);
+            gridElement.appendChild(buttonRowDiv);
+        }
+    }
+
+    function showItemDropdown(buttonElement) {
+        const activeTabId = getActiveTabId();
+        if (!activeTabId) return;
+
+        const dropdownContainer = buttonElement.nextElementSibling; 
+        const selectedSpecialty = spellTabsState[activeTabId].specialty;
+        const spellLevel = buttonElement.dataset.level;
+
+        const openDropdowns = document.querySelectorAll('.item-dropdown');
+        openDropdowns.forEach(dd => {
+            if (dd !== dropdownContainer) { dd.style.display = 'none'; dd.innerHTML = ''; }
+        });
+
+        dropdownContainer.innerHTML = ''; dropdownContainer.style.display = 'none';
+        if (!selectedSpecialty) {
+            alert('Please select a Specialty first!'); 
+            delete buttonElement.dataset.actionInProgress; return;
+        }
+        if (!spellLevel) {
+            console.error("Spell level not found on button.", buttonElement);
+            delete buttonElement.dataset.actionInProgress; return;
+        }
+
+        const spellsForThisLevel = classItems[selectedSpecialty]?.[spellLevel] || [];
+
+        if (spellsForThisLevel.length > 0) {
+            const selectElement = document.createElement('select');
+            selectElement.innerHTML = `<option value="">-- Select Spell --</option>` +
+                                      spellsForThisLevel.map(item => `<option value="${item}">${item}</option>`).join('');
+            selectElement.onchange = function() {
+                buttonElement.textContent = this.value || 'Pick a spell';
+                dropdownContainer.style.display = 'none'; 
+                delete buttonElement.dataset.actionInProgress; 
+            };
+            selectElement.onblur = function() {
+                 setTimeout(() => { 
+                    if (document.activeElement !== selectElement) {
+                        dropdownContainer.style.display = 'none';
+                        delete buttonElement.dataset.actionInProgress; 
+                    }
+                 }, 150);
+            };
+            dropdownContainer.appendChild(selectElement);
+            dropdownContainer.style.display = 'block';
+            selectElement.focus(); 
+        } else {
+            dropdownContainer.textContent = `No Level ${spellLevel} spells for ${selectedSpecialty}.`; 
+            dropdownContainer.style.display = 'block';
+            setTimeout(() => {
+                dropdownContainer.style.display = 'none';
+                delete buttonElement.dataset.actionInProgress; 
+            }, 2000); 
+        }
+    }
+   
+    function makeAllSpellSlotsActiveActual() {
+        const activeTabId = getActiveTabId();
+        if (!activeTabId || !['primary', 'secondary', 'tertiary'].includes(activeTabId)) return;
+        document.querySelectorAll(`#${activeTabId} .button`).forEach(button => button.classList.remove('grey'));
+    }
+   
+    function resetSpellsActual() {
+        const activeTabId = getActiveTabId();
+        if (!activeTabId || !['primary', 'secondary', 'tertiary'].includes(activeTabId)) return;
+        document.querySelectorAll(`#${activeTabId} .button`).forEach(button => {
+            button.textContent = 'Pick a spell'; 
+            button.classList.remove('grey'); 
+        });
+        document.querySelectorAll(`#${activeTabId} .item-dropdown`).forEach(dropdown => {
+            dropdown.innerHTML = ''; 
+            dropdown.style.display = 'none';
+        });
+    }
+    
+    function handleSpecialtyChange(newValue) {
+        const activeTabId = getActiveTabId();
+        if (!activeTabId) return;
+        spellTabsState[activeTabId].specialty = newValue;
+        createSpellButtons(activeTabId);
+    }
+    
+    function addColumnActual() {
+        const activeTabId = getActiveTabId();
+        if (!activeTabId) return;
+        spellTabsState[activeTabId].columnCount++;
+        const buttonRows = document.querySelectorAll(`#${activeTabId}-grid .button-row`);
+        buttonRows.forEach(row => {
+            const level = row.querySelector('.button')?.dataset.level;
+            if (level) {
+                row.appendChild(createSingleSpellSlot(level));
+            }
+        });
+    }
+   
+    function deleteColumnActual() {
+        const activeTabId = getActiveTabId();
+        if (!activeTabId) return;
+        if (spellTabsState[activeTabId].columnCount > defaultColumnCount) {
+            spellTabsState[activeTabId].columnCount--;
+            const buttonRows = document.querySelectorAll(`#${activeTabId}-grid .button-row`);
+            buttonRows.forEach(row => {
+                if (row.lastElementChild) {
+                    row.removeChild(row.lastElementChild);
+                }
+            });
+        } else {
+            alert(`Cannot delete further. Minimum spell slot count is ${defaultColumnCount}.`);
+        }
+    }
+
+    function setupStatsTabEventListeners() {
+        const buffCheckboxes = document.querySelectorAll('#stats .checkbox-group input[type="checkbox"]');
+        buffCheckboxes.forEach(checkbox => {
+            const label = checkbox.closest('label');
+            if (label && !checkbox.dataset.listenerAttached) {
+                const changeHandler = () => {
+                    if (checkbox.checked) {
+                        label.classList.add('active-buff');
+                    } else {
+                        label.classList.remove('active-buff');
+                        const toggleBtn = document.getElementById('buff-toggle-btn');
+                        if (toggleBtn && toggleBtn.dataset.state === 'hidden') {
+                            label.style.display = 'none';
+                        }
+                    }
+                };
+                checkbox.addEventListener('change', changeHandler);
+                checkbox.dataset.listenerAttached = 'true';
+                changeHandler();
+            }
+        });
+    }
+
+    function createBoundItemSlots(dayNumber) {
+        const listContainer = document.getElementById(`bound-items-day${dayNumber}`);
+        if (!listContainer || listContainer.dataset.slotsRendered === 'true') return;
+
+        let existingContent = (dayNumber === 2) ? listContainer.innerHTML : '';
+        listContainer.innerHTML = existingContent;
+
+        for (let i = 1; i <= 8; i++) {
+            const itemEntry = document.createElement('div');
+            itemEntry.classList.add('list-entry', 'item-entry');
+            itemEntry.innerHTML = `
+                <div class="item-field item-number-field">
+                    <label for="item-num-${dayNumber}-${i}">Item #:</label>
+                    <input type="text" id="item-num-${dayNumber}-${i}" class="item-number-input" placeholder="${i}">
+                </div>
+                <div class="item-details-group">
+                    <div class="item-field item-expiration">
+                        <label for="item-exp-${dayNumber}-${i}">Expiration:</label>
+                        <input type="text" id="item-exp-${dayNumber}-${i}">
+                    </div>
+                    <div class="item-field item-description">
+                        <label for="item-desc-${dayNumber}-${i}">Description:</label>
+                        <textarea id="item-desc-${dayNumber}-${i}" class="description-input" rows="2"></textarea>
+                    </div>
+                </div>`;
+            listContainer.appendChild(itemEntry); 
+        }
+        listContainer.dataset.slotsRendered = 'true';
+    }
+
+    // --- Reset and Confirmation Functions ---
+    function resetStatsActual() {
+        // Reset Health
+        document.getElementById('body').value = '0';
+        document.getElementById('armor').value = '0';
+
+        // Reset Buffs
+        document.querySelectorAll('#stats .checkbox-group input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
+            cb.closest('label').classList.remove('active-buff');
+        });
+        
+        // Reset Abilities and Resists
+        document.querySelectorAll('#stats .list-section .rem-input').forEach(input => input.value = '0');
+        document.querySelectorAll('#stats .list-section .total-input').forEach(input => input.value = '0');
+        
+        // Reset visibility and buttons to default "shown" state
+        applyVisibilityFromState(document.getElementById('buff-toggle-btn'), 'shown');
+        applyVisibilityFromState(document.getElementById('abilities-toggle-btn'), 'shown');
+        applyVisibilityFromState(document.getElementById('resists-toggle-btn'), 'shown');
+    }
+
+    function confirmResetStats() {
+        if (window.confirm("Are you sure you want to reset all fields on the Stats tab? This will set all totals and values to 0.")) {
+            resetStatsActual();
+        }
+    }
+
+    function resetItemsActual() {
+        for (let day = 1; day <= 2; day++) {
+            for (let i = 1; i <= 8; i++) {
+                const numInput = document.getElementById(`item-num-${day}-${i}`);
+                const expInput = document.getElementById(`item-exp-${day}-${i}`);
+                const descInput = document.getElementById(`item-desc-${day}-${i}`);
+                if (numInput) numInput.value = '';
+                if (expInput) expInput.value = '';
+                if (descInput) descInput.value = '';
+            }
+        }
+        document.getElementById('additional-items-text').value = '';
+        document.getElementById('same-as-day1').checked = false;
+    }
+
+    function confirmResetItems() {
+        if (window.confirm("Are you sure you want to reset all fields on the Items tab?")) {
+            resetItemsActual();
+        }
+    }
+   
+    function clearCurrentTabDataActual() { 
+        const activeTabId = getActiveTabId();
+        if (!activeTabId || !['primary', 'secondary', 'tertiary'].includes(activeTabId)) return; 
+        
+        spellTabsState[activeTabId].specialty = '';
+        spellTabsState[activeTabId].columnCount = defaultColumnCount;
+        document.getElementById('spell-class-select').value = '';
+        
+        createSpellButtons(activeTabId); 
+    }
+
+    function confirmAddColumn() { addColumnActual(); }
+    function confirmDeleteColumn() { const activeTabId = getActiveTabId(); if (!activeTabId || spellTabsState[activeTabId].columnCount <= defaultColumnCount) { alert(`No spell slots to delete. Minimum is ${defaultColumnCount}.`); return; } if (window.confirm("Are you sure you want to delete the last spell slot?")) { deleteColumnActual(); } }
+    function confirmClearCurrentTabData() { if (window.confirm("Are you sure you want to reset all data for this list? \nThis includes the selected specialty and all spell choices. Spell slots will reset to default.")) { clearCurrentTabDataActual(); } }
+    function confirmMakeAllActive() { if (window.confirm("Are you sure you want to make all spell slots active (green) in this list?")) { makeAllSpellSlotsActiveActual(); } }
+    function confirmResetSpells() { if (window.confirm("Are you sure you want to remove all selected spells in this list?")) { resetSpellsActual(); } }
+   
+    function toggleListVisibility(button) {
+        const isCurrentlyShown = button.dataset.state === 'shown';
+        applyVisibilityFromState(button, isCurrentlyShown ? 'hidden' : 'shown');
+    }
+
+    function applyVisibilityFromState(button, newState) {
+        if (!button) return;
+        const type = button.id.includes('buff') ? 'checkbox' : 'numeric';
+        const listClass = button.dataset.listClass;
+        const container = document.querySelector(`.${listClass}`);
+        if (!container) return;
+
+        button.dataset.state = newState;
+        const shouldHide = newState === 'hidden';
+
+        if (type === 'numeric') {
+            const entries = container.querySelectorAll('.list-entry');
+            entries.forEach(entry => {
+                const totalInput = entry.querySelector('.total-input');
+                const isUnused = totalInput && (totalInput.value === '0' || totalInput.value === '');
+                entry.style.display = (shouldHide && isUnused) ? 'none' : 'flex';
+            });
+            button.textContent = shouldHide ? 'Show all' : 'Hide Unused';
+        } else { // checkbox
+            const entries = container.querySelectorAll('.checkbox-group label');
+            entries.forEach(label => {
+                const checkbox = label.querySelector('input[type="checkbox"]');
+                const isInactive = checkbox && !checkbox.checked;
+                label.style.display = (shouldHide && isInactive) ? 'none' : 'flex';
+            });
+            button.textContent = shouldHide ? 'Show all' : 'Hide inactive';
+        }
+    }
+
+    function resetStatList(listClassName) {
+        const listContainer = document.querySelector(`.${listClassName}`);
+        if (!listContainer) return;
+
+        const entries = listContainer.querySelectorAll('.list-entry');
+        entries.forEach(entry => {
+            const remInput = entry.querySelector('.rem-input');
+            const totalInput = entry.querySelector('.total-input');
+            if (remInput && totalInput) {
+                remInput.value = totalInput.value;
+            }
+        });
+        alert('Remaining uses have been reset to their total values.');
+    }
+
+    // --- Character Management & Save/Load ---
+
+    function getCharacters() {
+        const charactersJSON = localStorage.getItem(DB_KEY);
+        return charactersJSON ? JSON.parse(charactersJSON) : {};
+    }
+
+    function saveCharacters(characters) {
+        localStorage.setItem(DB_KEY, JSON.stringify(characters));
+    }
+
+    function openCharacterModal() {
+        const modal = document.getElementById('character-modal');
+        populateCharacterModal();
+        modal.style.display = 'block';
+    }
+
+    function closeCharacterModal() {
+        const modal = document.getElementById('character-modal');
+        modal.style.display = 'none';
+    }
+
+    function populateCharacterModal() {
+        const characters = getCharacters();
+        const charList = document.getElementById('character-list');
+        charList.innerHTML = '';
+
+        if (Object.keys(characters).length === 0) {
+            charList.innerHTML = '<li style="text-align: center; padding: 10px;">No characters found. Create one below!</li>';
+            return;
+        }
+
+        for (const charName in characters) {
+            const item = document.createElement('li');
+            item.className = 'character-item';
+            item.innerHTML = `
+                <span class="character-name">${charName}</span>
+                <button class="char-btn-load" onclick="loadCharacter('${String(charName).replace(/'/g, "\\'")}')">Load</button>
+                <button class="char-btn-rename" onclick="renameCharacter('${String(charName).replace(/'/g, "\\'")}')">Rename</button>
+                <button class="char-btn-delete" onclick="deleteCharacter('${String(charName).replace(/'/g, "\\'")}')">Delete</button>
+            `;
+            charList.appendChild(item);
+        }
+    }
+
+    function createCharacter() {
+        const input = document.getElementById('new-character-name');
+        const newName = input.value.trim();
+        if (!newName) {
+            alert("Please enter a character name.");
+            return;
+        }
+
+        const characters = getCharacters();
+        if (characters[newName]) {
+            alert("A character with this name already exists.");
+            return;
+        }
+
+        characters[newName] = {}; // Create an empty character
+        saveCharacters(characters);
+       
+        input.value = '';
+        populateCharacterModal();
+    }
+
+    function loadCharacter(charName) {
+        const characters = getCharacters();
+        const data = characters[charName];
+
+        if (typeof data === 'undefined') {
+            alert("Could not find character data.");
+            return;
+        }
+
+        activeCharacterName = charName;
+        document.getElementById('main-title').textContent = `Character Tracker - ${charName}`;
+
+        applyDataToUI(data);
+        closeCharacterModal();
+        alert(`Character "${charName}" loaded.`);
+    }
+   
+    function renameCharacter(oldName) {
+        const newName = prompt(`Enter a new name for "${oldName}":`, oldName);
+        if (!newName || newName.trim() === '' || newName === oldName) {
+            return;
+        }
+
+        const characters = getCharacters();
+        if (characters[newName.trim()]) {
+            alert("A character with this name already exists.");
+            return;
+        }
+
+        characters[newName.trim()] = characters[oldName];
+        delete characters[oldName];
+        saveCharacters(characters);
+
+        if(activeCharacterName === oldName) {
+            activeCharacterName = newName.trim();
+            document.getElementById('main-title').textContent = `Character Tracker - ${activeCharacterName}`;
+        }
+
+        populateCharacterModal();
+    }
+
+    function deleteCharacter(charName) {
+        if (!confirm(`Are you sure you want to permanently delete "${charName}"?`)) {
+            return;
+        }
+
+        const characters = getCharacters();
+        delete characters[charName];
+        saveCharacters(characters);
+
+        if (activeCharacterName === charName) {
+            activeCharacterName = null;
+            document.getElementById('main-title').textContent = 'Character Tracker';
+            resetAllTabs();
+        }
+
+        populateCharacterModal();
+    }
+
+    function resetAllTabs() {
+        resetStatsActual();
+        resetItemsActual();
+        ['primary', 'secondary', 'tertiary'].forEach(tabId => {
+            spellTabsState[tabId].specialty = '';
+            spellTabsState[tabId].columnCount = defaultColumnCount;
+            createSpellButtons(tabId);
+        });
+        showSpellList('primary');
+    }
+
+    function applyDataToUI(data) {
+        resetAllTabs();
+
+        if (data.stats) {
+            document.getElementById('body').value = data.stats.body || '0';
+            document.getElementById('armor').value = data.stats.armor || '0';
+            if (data.stats.buffs) { Object.keys(data.stats.buffs).forEach(id => { const cb = document.getElementById(id); if(cb) cb.checked = data.stats.buffs[id]; }); }
+            
+            if (data.stats.abilities) {
+                Object.keys(data.stats.abilities).forEach(id => {
+                    const dataObj = data.stats.abilities[id];
+                    const remInput = document.getElementById(`${id}-rem`);
+                    const totalInput = document.getElementById(`${id}-total`);
+                    if (remInput && totalInput) {
+                        if (typeof dataObj === 'object' && dataObj !== null) {
+                            remInput.value = dataObj.rem || '0';
+                            totalInput.value = dataObj.total || '0';
+                        } else { 
+                            remInput.value = dataObj || '0';
+                            totalInput.value = dataObj || '0';
+                        }
+                    }
+                });
+            }
+            if (data.stats.resists) {
+                Object.keys(data.stats.resists).forEach(id => {
+                    const dataObj = data.stats.resists[id];
+                    const remInput = document.getElementById(`${id}-rem`);
+                    const totalInput = document.getElementById(`${id}-total`);
+                    if (remInput && totalInput) {
+                        if (typeof dataObj === 'object' && dataObj !== null) {
+                            remInput.value = dataObj.rem || '0';
+                            totalInput.value = dataObj.total || '0';
+                        } else { 
+                            remInput.value = dataObj || '0';
+                            totalInput.value = '0'; 
+                        }
+                    }
+                });
+            }
+            if(data.stats.viewStates) {
+                applyVisibilityFromState(document.getElementById('buff-toggle-btn'), data.stats.viewStates.buffs || 'shown');
+                applyVisibilityFromState(document.getElementById('abilities-toggle-btn'), data.stats.viewStates.abilities || 'shown');
+                applyVisibilityFromState(document.getElementById('resists-toggle-btn'), data.stats.viewStates.resists || 'shown');
+            }
+            setupStatsTabEventListeners();
+        }
+
+        if (data.items) {
+            if(data.items.day1) { data.items.day1.forEach((item, i) => { const num = document.getElementById(`item-num-1-${i + 1}`); if(num) num.value = item.num; const exp = document.getElementById(`item-exp-1-${i + 1}`); if(exp) exp.value = item.exp; const desc = document.getElementById(`item-desc-1-${i + 1}`); if(desc) desc.value = item.desc; }); }
+            if(data.items.day2) { data.items.day2.forEach((item, i) => { const num = document.getElementById(`item-num-2-${i + 1}`); if(num) num.value = item.num; const exp = document.getElementById(`item-exp-2-${i + 1}`); if(exp) exp.value = item.exp; const desc = document.getElementById(`item-desc-2-${i + 1}`); if(desc) desc.value = item.desc; }); }
+            document.getElementById('additional-items-text').value = data.items.additional || '';
+            document.getElementById('same-as-day1').checked = data.items.sameAsDay1 || false;
+        }
+
+        if(data.spellTabs) {
+            ['primary', 'secondary', 'tertiary'].forEach(tabId => {
+                const tabData = data.spellTabs[tabId];
+                if (tabData) {
+                    spellTabsState[tabId].columnCount = tabData.columnCount || defaultColumnCount;
+                    spellTabsState[tabId].specialty = tabData.specialty || '';
+                    createSpellButtons(tabId);
+                    
+                    const buttons = document.querySelectorAll(`#${tabId}-grid .button`);
+                    if(tabData.slots && buttons.length === tabData.slots.length) {
+                        buttons.forEach((button, i) => {
+                            button.textContent = tabData.slots[i].text;
+                            if (tabData.slots[i].isGrey) { button.classList.add('grey'); } 
+                            else { button.classList.remove('grey'); }
+                        });
+                    }
+                }
+            });
+            showSpellList('primary'); // Refresh view
+        }
+    }
+   
+    function saveData() {
+        if (!activeCharacterName) {
+            alert("No character loaded. Please load or create a character before saving.");
+            return;
+        }
+       
+        const characters = getCharacters();
+        const currentCharacterData = { stats: {}, items: { day1: [], day2: [] }, spellTabs: {} };
+
+        // Save Stats
+        currentCharacterData.stats.body = document.getElementById('body').value;
+        currentCharacterData.stats.armor = document.getElementById('armor').value;
+        currentCharacterData.stats.buffs = {};
+        document.querySelectorAll('#stats .checkbox-group input[type="checkbox"]').forEach(cb => { currentCharacterData.stats.buffs[cb.id] = cb.checked; });
+        
+        currentCharacterData.stats.viewStates = {
+            buffs: document.getElementById('buff-toggle-btn').dataset.state,
+            abilities: document.getElementById('abilities-toggle-btn').dataset.state,
+            resists: document.getElementById('resists-toggle-btn').dataset.state
+        };
+
+        currentCharacterData.stats.abilities = {};
+        document.querySelectorAll('.abilities-list .list-entry').forEach(entry => {
+            const remInput = entry.querySelector('.rem-input');
+            const totalInput = entry.querySelector('.total-input');
+            if (remInput && totalInput) {
+                const baseId = remInput.id.replace('-rem', '');
+                currentCharacterData.stats.abilities[baseId] = { rem: remInput.value, total: totalInput.value };
+            }
+        });
+        currentCharacterData.stats.resists = {};
+        document.querySelectorAll('.resists-list .list-entry').forEach(entry => {
+            const remInput = entry.querySelector('.rem-input');
+            const totalInput = entry.querySelector('.total-input');
+             if (remInput && totalInput) {
+                const baseId = remInput.id.replace('-rem', '');
+                currentCharacterData.stats.resists[baseId] = { rem: remInput.value, total: totalInput.value };
+            }
+        });
+
+        // Save Items
+        for (let i = 1; i <= 8; i++) {
+            currentCharacterData.items.day1.push({ num: document.getElementById(`item-num-1-${i}`).value, exp: document.getElementById(`item-exp-1-${i}`).value, desc: document.getElementById(`item-desc-1-${i}`).value });
+            currentCharacterData.items.day2.push({ num: document.getElementById(`item-num-2-${i}`).value, exp: document.getElementById(`item-exp-2-${i}`).value, desc: document.getElementById(`item-desc-2-${i}`).value });
+        }
+        currentCharacterData.items.additional = document.getElementById('additional-items-text').value;
+        currentCharacterData.items.sameAsDay1 = document.getElementById('same-as-day1').checked;
+        
+        // Save Spells from state object
+        ['primary', 'secondary', 'tertiary'].forEach(tabId => {
+            const tabData = {};
+            tabData.columnCount = spellTabsState[tabId].columnCount;
+            tabData.specialty = spellTabsState[tabId].specialty;
+            
+            tabData.slots = [];
+            document.querySelectorAll(`#${tabId}-grid .button`).forEach(button => {
+                tabData.slots.push({ text: button.textContent, isGrey: button.classList.contains('grey') });
+            });
+            currentCharacterData.spellTabs[tabId] = tabData;
+        });
+
+        characters[activeCharacterName] = currentCharacterData;
+        saveCharacters(characters);
+        alert(`Character "${activeCharacterName}" saved successfully.`);
+    }
+
+    // --- On Page Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+        window.onclick = function(event) {
+            const modal = document.getElementById('character-modal');
+            if (event.target == modal) {
+                closeCharacterModal();
+            }
+        }
+
+        showTab('stats'); 
+       
+        createBoundItemSlots(1);
+        createBoundItemSlots(2);
+        createSpellButtons('primary');
+        createSpellButtons('secondary');
+        createSpellButtons('tertiary');
+        showSpellList('primary');
+        setupStatsTabEventListeners();
+       
+        // On launch, always prompt the user to load or create a character.
+        setTimeout(() => {
+            openCharacterModal();
+        }, 500);
+    });
+</script>
+</body>
+</html>
